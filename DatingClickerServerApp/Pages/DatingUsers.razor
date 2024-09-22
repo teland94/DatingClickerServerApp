@@ -50,7 +50,7 @@
                         .Select(g => new
                         {
                             DatingUserId = g.Key,
-                            ActionType = g.First().ActionType,
+                            ActionType = g.Last().ActionType,
                             Count = g.Count(),
                             LatestDate = g.Max(a => a.CreatedDate)
                         })

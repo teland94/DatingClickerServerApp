@@ -27,7 +27,6 @@ namespace DatingClickerServerApp.Common
         public async Task ProcessDatingUsers(bool onlineOnly, int repeatCount, CancellationToken cancellationToken)
         {
             var random = new Random();
-            string result;
 
             try
             {
@@ -51,82 +50,77 @@ namespace DatingClickerServerApp.Common
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            DatingUserActionType datingUserActionType;
+                            var (result, actionType) = await DetermineAction(datingUser, user, superLikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, counter, cancellationToken);
 
-                            if (_datingClickerService.IsUserSuperLikeable(datingUser, superLikeCriteries))
-                            {
-                                if (isUserEnoughSuperLikeCount)
-                                {
-                                    string superLikeText;
-
-                                    if (!isEndOfDayApproaching)
-                                    {
-                                        // Обычные критерии
-                                        superLikeText = "Если правда увлекаешься ИТ, то удачи тебе в развитии в нашей нелегкой ИТ-сфере 😊";
-                                    }
-                                    else
-                                    {
-                                        // Смягченные критерии за час до конца дня
-                                        superLikeText = $"Привет, твой рост {datingUser.Height} см хорош! 😊";
-                                    }
-
-                                    result = $"Super Like: {await _datingClickerService.SuperLikeUser(datingUser.ExternalId, superLikeText, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
-
-                                    user.SuperLikeCount--;
-                                    datingUserActionType = DatingUserActionType.SuperLike;
-                                }
-                                else
-                                {
-                                    result = "None";
-
-                                    datingUserActionType = DatingUserActionType.None;
-                                }
-                            }
-                            else if (_datingClickerService.IsUserLikeable(datingUser))
-                            {
-                                result = $"Like: {await _datingClickerService.LikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
-
-                                datingUserActionType = DatingUserActionType.Like;
-                            }
-                            else
-                            {
-                                result = $"Dislike: {await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken)}, Дети: {datingUser.HasChildren}, Возраст: {datingUser.Age}, Рост: {datingUser.Height}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
-
-                                datingUserActionType = DatingUserActionType.Dislike;
-                            }
-
-                            await SaveDatingUser(datingUser, datingUserActionType, cancellationToken);
+                            await SaveDatingUser(datingUser, actionType, cancellationToken);
 
                             OnResultUpdated?.Invoke(result);
 
-                            // Асинхронная случайная задержка от 1 до 5 секунд
-                            await Task.Delay(random.Next(1000, 5000), cancellationToken);
+                            await RandomDelay(random, 1000, 5000, cancellationToken);
                         }
                     }
                     else
                     {
-                        result = onlineOnly ? "Не найдено онлайн пользователей.\n" : "Не найдено пользователей.\n";
-                        OnResultUpdated?.Invoke(result);
+                        OnResultUpdated?.Invoke(onlineOnly ? "Не найдено онлайн пользователей.\n" : "Не найдено пользователей.\n");
                         break;
                     }
 
-                    result = "================================\n";
-                    OnResultUpdated?.Invoke(result);
+                    OnResultUpdated?.Invoke("================================\n");
 
-                    // Асинхронная случайная задержка от 2 до 7 секунд
-                    await Task.Delay(random.Next(2000, 7000), cancellationToken);
+                    await RandomDelay(random, 2000, 7000, cancellationToken);
                 }
 
-                result = "Обработка завершена.\n";
-                OnResultUpdated?.Invoke(result);
+                OnResultUpdated?.Invoke("Обработка завершена.\n");
             }
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                result = ex.Message;
-                OnResultUpdated?.Invoke(result);
+                OnResultUpdated?.Invoke(ex.Message);
                 throw;
             }
+        }
+
+        private async Task<(string result, DatingUserActionType actionType)> DetermineAction(DatingUser datingUser, User user, DatingUserCriteriesInfo superLikeCriteries, bool isEndOfDayApproaching, bool isUserEnoughSuperLikeCount, int counter, CancellationToken cancellationToken)
+        {
+            string result;
+            DatingUserActionType actionType;
+
+            if (_datingClickerService.IsUserSuperLikeable(datingUser, superLikeCriteries))
+            {
+                if (isUserEnoughSuperLikeCount)
+                {
+                    string superLikeText = !isEndOfDayApproaching
+                        ? "Если правда увлекаешься ИТ, то удачи тебе в развитии в нашей нелегкой ИТ-сфере 😊"
+                        : $"Привет, твой рост {datingUser.Height} см хорош! 😊";
+
+                    result = $"Super Like: {await _datingClickerService.SuperLikeUser(datingUser.ExternalId, superLikeText, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+
+                    user.SuperLikeCount--;
+                    actionType = DatingUserActionType.SuperLike;
+                }
+                else
+                {
+                    result = "None";
+                    actionType = DatingUserActionType.None;
+                }
+            }
+            else if (_datingClickerService.IsUserLikeable(datingUser))
+            {
+                result = $"Like: {await _datingClickerService.LikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                actionType = DatingUserActionType.Like;
+            }
+            else
+            {
+                result = $"Dislike: {await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken)}, Дети: {datingUser.HasChildren}, Возраст: {datingUser.Age}, Рост: {datingUser.Height}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                actionType = DatingUserActionType.Dislike;
+            }
+
+            return (result, actionType);
+        }
+
+        private static async Task RandomDelay(Random random, int minMilliseconds, int maxMilliseconds, CancellationToken cancellationToken)
+        {
+            await Task.Delay(random.Next(minMilliseconds, maxMilliseconds), cancellationToken);
         }
 
         private static DatingUserCriteriesInfo GetSuperLikeCriteries(bool isUserEnoughSuperLikeCount, bool isSmoothCriteries = false)
