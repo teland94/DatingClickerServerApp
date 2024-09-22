@@ -1,0 +1,147 @@
+﻿@page "/dating-users"
+@using DatingClickerServerApp.Common.Extensions
+@using DatingClickerServerApp.Common.Model
+@using DatingClickerServerApp.Common.Persistence
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Dating Clicker Users</PageTitle>
+
+<div class="mb-2 d-flex align-items-center">
+    <div class="form-check me-3">
+        <input class="form-check-input" type="checkbox" @bind="_onlyVerified" @bind:after="FilterUsers" />
+        <label class="form-check-label" for="onlyVerified">
+            Только верифицированные
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" @bind="_onlyToday" @bind:after="FilterUsers" />
+        <label class="form-check-label" for="onlyToday">
+            Только сегодняшние
+        </label>
+    </div>
+</div>
+
+<p>Количество: @_totalUsers</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered mb-3">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Фото</th>
+                <th>✔</th>
+                <th>Возраст</th>
+                <th>👶</th>
+                <th>Рост</th>
+                <th>О себе</th>
+                <th>Интересы</th>
+                <th>Локация</th>
+                <th>👀</th>
+                <th>Дата</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (_users != null)
+            {
+                @foreach (var user in _users)
+                {
+                    var actionGroups = user.Actions
+                        .GroupBy(a => a.DatingUserId)
+                        .Select(g => new
+                        {
+                            DatingUserId = g.Key,
+                            ActionType = g.First().ActionType,
+                            Count = g.Count(),
+                            LatestDate = g.Max(a => a.CreatedDate)
+                        })
+                        .ToList();
+
+                    var lastAction = actionGroups.OrderByDescending(ag => ag.LatestDate).FirstOrDefault();
+
+                    var rowClass = lastAction.ActionType switch
+                    {
+                        DatingUserActionType.SuperLike => "table-success",
+                        DatingUserActionType.Dislike => "table-danger",
+                        DatingUserActionType.None => "table-warning",
+                        _ => ""
+                    };
+
+                    <tr class="@rowClass">
+                        <td>@user.ExternalId</td>
+                        <td><a target="_blank" href="@ExtractShareUrlFromJsonData(user.JsonData)"><img src="@user.PreviewUrl" alt="Превью" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
+                        <td>@(user.IsVerified ? "✔" : "")</td>
+                        <td>@user.Age</td>
+                        <td>@(user.HasChildren.HasValue && user.HasChildren.Value ? "👶" : "")</td>
+                        <td>@user.Height</td>
+                        <td>@user.About</td>
+                        <td>@string.Join(", ", user.Interests)</td>
+                        <td><span class="small-emoji">📍</span>@(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
+                        <td class="text-nowrap">
+                            @(lastAction.ActionType switch
+                            {
+                                DatingUserActionType.None => "➖",
+                                DatingUserActionType.Like => "❤️",
+                                DatingUserActionType.Dislike => "❌",
+                                DatingUserActionType.SuperLike => "🔥",
+                                _ => ""
+                            })
+                            @if (actionGroups.Any(ag => ag.Count > 1))
+                            {
+                                <span>*</span>
+                            }
+                        </td>
+                        <td>@actionGroups.Max(ag => ag.LatestDate.ConvertToLocalTime()).ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @( _currentPage == 1 ? "disabled" : "" )">
+                <button class="page-link" @onclick="PreviousPage">Пред.</button>
+            </li>
+            @if (_currentPage > _pageRange + 1)
+            {
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                </li>
+                @if (_currentPage > _pageRange + 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+            @for (int i = Math.Max(1, _currentPage - _pageRange); i <= Math.Min(_totalPages, _currentPage + _pageRange); i++)
+            {
+                var pageIndex = i; // Сохранение значения i
+                <li class="page-item @( _currentPage == pageIndex ? "active" : "" )">
+                    <button class="page-link" @onclick="() => GoToPage(pageIndex)">@pageIndex</button>
+                </li>
+            }
+            @if (_currentPage < _totalPages - _pageRange)
+            {
+                @if (_currentPage < _totalPages - _pageRange - 1)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(_totalPages)">@_totalPages</button>
+                </li>
+            }
+            <li class="page-item @( _currentPage == _totalPages ? "disabled" : "" )">
+                <button class="page-link" @onclick="NextPage">След.</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+    .small-emoji {
+        font-size: 0.6em;
+    }
+</style>

@@ -1,0 +1,14 @@
+﻿.ml-1 {
+    margin-left: 0.25rem;
+}
+
+.width-small {
+    width: 100px;
+}
+
+.result-container {
+    height: calc(100dvh - 150px);
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
