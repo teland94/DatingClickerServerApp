@@ -158,6 +158,7 @@ namespace DatingClickerServerApp.Common
             if (dbDatingUser == null)
             {
                 datingUser.CreatedDate = DateTime.UtcNow;
+                datingUser.UpdatedDate = DateTime.UtcNow;
 
                 datingUser.Actions =
                 [
@@ -172,6 +173,19 @@ namespace DatingClickerServerApp.Common
             }
             else
             {
+                dbDatingUser.UpdatedDate = DateTime.UtcNow;
+                dbDatingUser.IsVerified = datingUser.IsVerified;
+                dbDatingUser.Age = datingUser.Age;
+                dbDatingUser.HasChildren = datingUser.HasChildren;
+                dbDatingUser.Height = datingUser.Height;
+                dbDatingUser.PreviewUrl = datingUser.PreviewUrl;
+                dbDatingUser.About = datingUser.About;
+                dbDatingUser.Interests = datingUser.Interests;
+                dbDatingUser.CityName = datingUser.CityName;
+                dbDatingUser.JsonData = datingUser.JsonData;
+
+                _dbContext.DatingUsers.Update(dbDatingUser);
+
                 await _dbContext.DatingUserActions.AddAsync(new DatingUserAction
                 {
                     CreatedDate = DateTime.UtcNow,

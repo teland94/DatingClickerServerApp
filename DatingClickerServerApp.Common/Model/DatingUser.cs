@@ -10,6 +10,8 @@ namespace DatingClickerServerApp.Common.Model
 
         public DateTime CreatedDate { get; set; }
 
+        public DateTime UpdatedDate { get; set; }
+
         public bool IsVerified { get; set; }
 
         public int? Age { get; set; }

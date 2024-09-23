@@ -49,7 +49,7 @@ namespace DatingClickerServerApp.Pages
             _totalPages = (int)Math.Ceiling((double)_totalUsers / _pageSize);
 
             _users = await query
-                .OrderByDescending(u => u.Actions.Max(a => a.CreatedDate))
+                .OrderByDescending(u => u.UpdatedDate)
                 .Skip((_currentPage - 1) * _pageSize)
                 .Take(_pageSize)
                 .ToListAsync();
