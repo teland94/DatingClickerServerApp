@@ -50,7 +50,7 @@ namespace DatingClickerServerApp.Common
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            var (result, actionType) = await DetermineAction(datingUser, user, superLikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, counter, cancellationToken);
+                            var (result, actionType) = await DetermineAction(datingUser, user, superLikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, ++counter, cancellationToken);
 
                             await SaveDatingUser(datingUser, actionType, cancellationToken);
 
@@ -85,6 +85,23 @@ namespace DatingClickerServerApp.Common
             string result;
             DatingUserActionType actionType;
 
+            var existingUser = await _dbContext.DatingUsers
+                .Include(u => u.Actions)
+                .FirstOrDefaultAsync(u => u.ExternalId == datingUser.ExternalId, cancellationToken);
+
+            if (existingUser != null)
+            {
+                var userHasExistingSuperLikeAction = existingUser.Actions
+                    .Any(a => a.ActionType == DatingUserActionType.SuperLike);
+
+                if (userHasExistingSuperLikeAction)
+                {
+                    await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken);
+
+                    return ($"Super Like already exists for user: {datingUser.ExternalId}\n", DatingUserActionType.Dislike);
+                }
+            }
+
             if (_datingClickerService.IsUserSuperLikeable(datingUser, superLikeCriteries))
             {
                 if (isUserEnoughSuperLikeCount)
@@ -93,7 +110,7 @@ namespace DatingClickerServerApp.Common
                         ? "Если правда увлекаешься ИТ, то удачи тебе в развитии в нашей нелегкой ИТ-сфере 😊"
                         : $"Привет, твой рост {datingUser.Height} см хорош! 😊";
 
-                    result = $"Super Like: {await _datingClickerService.SuperLikeUser(datingUser.ExternalId, superLikeText, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                    result = $"Super Like: {await _datingClickerService.SuperLikeUser(datingUser.ExternalId, superLikeText, cancellationToken)}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
 
                     user.SuperLikeCount--;
                     actionType = DatingUserActionType.SuperLike;
@@ -106,12 +123,12 @@ namespace DatingClickerServerApp.Common
             }
             else if (_datingClickerService.IsUserLikeable(datingUser))
             {
-                result = $"Like: {await _datingClickerService.LikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                result = $"Like: {await _datingClickerService.LikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
                 actionType = DatingUserActionType.Like;
             }
             else
             {
-                result = $"Dislike: {await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken)}, Дети: {datingUser.HasChildren}, Возраст: {datingUser.Age}, Рост: {datingUser.Height}, {datingUser.CityName}, {++counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                result = $"Dislike: {await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken)}, Дети: {datingUser.HasChildren}, Возраст: {datingUser.Age}, Рост: {datingUser.Height}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
                 actionType = DatingUserActionType.Dislike;
             }
 
