@@ -3,9 +3,10 @@ using DatingClickerServerApp.Common.Model;
 using DatingClickerServerApp.Common.Persistence;
 using DatingClickerServerApp.Common.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace DatingClickerServerApp.Pages
 {
@@ -14,15 +15,16 @@ namespace DatingClickerServerApp.Pages
         private List<DatingUser> _users;
         private bool _onlyVerified = false;
         private bool _onlyToday = true;
+        private string _searchText = string.Empty;
 
         private int _currentPage = 1;
         private int _pageSize = 100;
         private int _totalUsers;
         private int _totalPages;
-        private const int _pageRange = 2; // Константа для диапазона отображаемых страниц
 
-        [Inject] IDbContextFactory<AppDbContext> DbContextFactory { get; set; }
-        [Inject] IDatingClickerService DatingClickerService { get; set; }
+        [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; }
+        [Inject] private IDatingClickerService DatingClickerService { get; set; }
+        [Inject] private IJSRuntime JSRuntime { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -45,6 +47,13 @@ namespace DatingClickerServerApp.Pages
                 query = query.Where(u => u.Actions.Any(a => a.CreatedDate >= startOfToday));
             }
 
+            if (!string.IsNullOrEmpty(_searchText))
+            {
+                var lowerSearchText = _searchText.ToLower();
+                query = query.Where(u => u.ExternalId.ToLower().Contains(lowerSearchText) ||
+                                        u.About.ToLower().Contains(lowerSearchText));
+            }
+
             _totalUsers = await query.CountAsync();
             _totalPages = (int)Math.Ceiling((double)_totalUsers / _pageSize);
 
@@ -61,6 +70,7 @@ namespace DatingClickerServerApp.Pages
             {
                 _currentPage++;
                 await LoadUsers();
+                await JSRuntime.InvokeVoidAsync("scrollToTop");
             }
         }
 
@@ -70,6 +80,7 @@ namespace DatingClickerServerApp.Pages
             {
                 _currentPage--;
                 await LoadUsers();
+                await JSRuntime.InvokeVoidAsync("scrollToTop");
             }
         }
 
@@ -79,6 +90,7 @@ namespace DatingClickerServerApp.Pages
             {
                 _currentPage = pageNumber;
                 await LoadUsers();
+                await JSRuntime.InvokeVoidAsync("scrollToTop");
             }
         }
 
@@ -105,6 +117,26 @@ namespace DatingClickerServerApp.Pages
         {
             _currentPage = 1; // Сброс на первую страницу при фильтрации
             await LoadUsers();
+            await JSRuntime.InvokeVoidAsync("scrollToTop");
+        }
+
+        private async Task OnSearch()
+        {
+            await FilterUsers();
+        }
+
+        private async Task OnKeyPress(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await OnSearch();
+            }
+        }
+
+        private async Task ClearSearch()
+        {
+            _searchText = string.Empty;
+            await FilterUsers();
         }
     }
 }

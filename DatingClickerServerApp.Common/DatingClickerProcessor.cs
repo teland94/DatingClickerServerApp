@@ -107,7 +107,7 @@ namespace DatingClickerServerApp.Common
                 if (isUserEnoughSuperLikeCount)
                 {
                     string superLikeText = !isEndOfDayApproaching
-                        ? "Если правда увлекаешься ИТ, то удачи тебе в развитии в нашей нелегкой ИТ-сфере 😊"
+                        ? "Если правда увлекаешься или работаешь в ИТ, то удачи тебе в развитии в нашей нелегкой ИТ-сфере 😊"
                         : $"Привет, твой рост {datingUser.Height} см хорош! 😊";
 
                     result = $"Super Like: {await _datingClickerService.SuperLikeUser(datingUser.ExternalId, superLikeText, cancellationToken)}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
