@@ -49,16 +49,7 @@ namespace DatingClickerServerApp.Common.Persistence
                 .HasMaxLength(100);
 
             builder.Property(du => du.Interests)
-                .IsRequired(true)
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                )
-                .Metadata.SetValueComparer(new ValueComparer<ICollection<string>>(
-                    (c1, c2) => c1.SequenceEqual(c2),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()
-                ));
+                .IsRequired(false);
 
             builder.Property(e => e.JsonData)
                 .HasColumnType("jsonb")

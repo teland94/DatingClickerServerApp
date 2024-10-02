@@ -23,7 +23,7 @@
 </div>
 
 <div class="input-group mb-3">
-    <input type="text" class="form-control" placeholder="Поиск по ID или описанию" aria-label="Поиск по ID или описанию" aria-describedby="button-search"
+    <input type="text" class="form-control" placeholder="Поиск по ID, описанию или интересам" aria-label="Поиск по ID, описанию или интересам" aria-describedby="button-search"
         @bind-value="_searchText" @bind-value:event="oninput" @onkeypress="OnKeyPress">
     <div class="input-group-append">
         <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch" disabled="@string.IsNullOrEmpty(_searchText)">

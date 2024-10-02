@@ -24,7 +24,7 @@ namespace DatingClickerServerApp.Common.Model
 
         public string About { get; set; }
 
-        public ICollection<string> Interests { get; set; }
+        public string[] Interests { get; set; }
 
         public string CityName { get; set; }
 

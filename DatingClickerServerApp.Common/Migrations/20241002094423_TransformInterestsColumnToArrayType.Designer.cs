@@ -4,6 +4,7 @@ using System.Text.Json;
 using DatingClickerServerApp.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DatingClickerServerApp.Common.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241002094423_TransformInterestsColumnToArrayType")]
+    partial class TransformInterestsColumnToArrayType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,7 +79,7 @@ namespace DatingClickerServerApp.Common.Migrations
                     b.HasIndex("ExternalId")
                         .IsUnique();
 
-                    b.ToTable("DatingUsers", (string)null);
+                    b.ToTable("DatingUsers");
                 });
 
             modelBuilder.Entity("DatingClickerServerApp.Common.Model.DatingUserAction", b =>
@@ -100,7 +103,7 @@ namespace DatingClickerServerApp.Common.Migrations
 
                     b.HasIndex("DatingUserId");
 
-                    b.ToTable("DatingUserActions", (string)null);
+                    b.ToTable("DatingUserActions");
                 });
 
             modelBuilder.Entity("DatingClickerServerApp.Common.Model.DatingUserAction", b =>

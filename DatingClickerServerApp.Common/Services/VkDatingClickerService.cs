@@ -56,7 +56,7 @@ namespace DatingClickerServerApp.Common.Services
                 Height = user.GetProperty("form").TryGetProperty("height", out var height) ? height.GetInt32() : null,
                 PreviewUrl = new Uri(user.GetProperty("preview_url").ToString()),
                 About = user.GetProperty("form").GetProperty("about").GetString(),
-                Interests = user.GetProperty("form").GetProperty("interests").EnumerateArray().Select(i => i.GetString()).ToList(),
+                Interests = user.GetProperty("form").GetProperty("interests").EnumerateArray().Select(i => i.GetString()).ToArray(),
                 CityName = user.TryGetProperty("city_name", out var cityName) ? cityName.ToString() : null,
                 JsonData = user
             }).ToList();
@@ -90,7 +90,7 @@ namespace DatingClickerServerApp.Common.Services
                 Height = user.GetProperty("form").TryGetProperty("height", out var height) ? height.GetInt32() : null,
                 PreviewUrl = new Uri(user.GetProperty("preview_url").ToString()),
                 About = user.GetProperty("form").GetProperty("about").GetString(),
-                Interests = user.GetProperty("form").GetProperty("interests").EnumerateArray().Select(i => i.GetString()).ToList(),
+                Interests = user.GetProperty("form").GetProperty("interests").EnumerateArray().Select(i => i.GetString()).ToArray(),
                 CityName = user.TryGetProperty("city_name", out var cityName) ? cityName.ToString() : null,
                 JsonData = user
             };
