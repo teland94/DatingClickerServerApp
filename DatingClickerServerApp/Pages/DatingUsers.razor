@@ -3,6 +3,7 @@
 @using DatingClickerServerApp.Common.Model
 @using DatingClickerServerApp.Common.Persistence
 @using DatingClickerServerApp.Components
+@using DatingClickerServerApp.Modals
 @using Microsoft.EntityFrameworkCore
 
 <PageTitle>Dating Clicker Users</PageTitle>
@@ -83,7 +84,11 @@
                     };
 
                     <tr class="@rowClass">
-                        <td>@user.ExternalId</td>
+                        <td>
+                            <a href="javascript:void(0)" @onclick="() => ShowUserModal(user)">
+                                @user.ExternalId
+                            </a>
+                        </td>
                         <td><a target="_blank" href="@ExtractShareUrlFromJsonData(user.JsonData)"><img src="@user.PreviewUrl" alt="Превью" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
                         <td>@(user.IsVerified ? "✔" : "")</td>
                         <td>@user.Age</td>
@@ -91,7 +96,7 @@
                         <td>@user.Height</td>
                         <td>@user.About</td>
                         <td>@string.Join(", ", user.Interests)</td>
-                        <td><span class="small-emoji">📍</span>@(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
+                        <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
                         <td class="text-nowrap">
                             @(lastAction.ActionType switch
                             {
@@ -114,6 +119,8 @@
     </table>
 
     <Pagination CurrentPage="@_currentPage" TotalPages="@_totalPages" OnPageChanged="GoToPage" />
+
+    <DatingUserModal User="_selectedUser" />
 </div>
 
 <style>

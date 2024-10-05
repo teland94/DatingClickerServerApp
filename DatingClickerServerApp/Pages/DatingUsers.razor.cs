@@ -22,6 +22,8 @@ namespace DatingClickerServerApp.Pages
         private int _totalUsers;
         private int _totalPages;
 
+        private DatingUser _selectedUser;
+
         [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; }
         [Inject] private IDatingClickerService DatingClickerService { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
@@ -138,6 +140,14 @@ namespace DatingClickerServerApp.Pages
         {
             _searchText = string.Empty;
             await FilterUsers();
+        }
+
+        private async Task ShowUserModal(DatingUser user)
+        {
+            _selectedUser = user;
+
+            var modal = await JSRuntime.InvokeAsync<IJSObjectReference>("bootstrap.Modal.getOrCreateInstance", "#userModal");
+            await modal.InvokeVoidAsync("show");
         }
     }
 }

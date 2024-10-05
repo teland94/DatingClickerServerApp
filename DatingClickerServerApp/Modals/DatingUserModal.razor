@@ -1,0 +1,106 @@
+﻿@using DatingClickerServerApp.Common.Model
+@using DatingClickerServerApp.Common.Extensions
+@using System.Text.Json
+
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        @if (User != null)
+        {
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">Информация о пользователе</h5>
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="@User.PreviewUrl" alt="Аватарка" class="rounded-circle me-3">
+                        <div>
+                            <h5>
+                                <span>@GetUserName(User.JsonData), @User.Age</span>
+                                @if (User.Height.HasValue)
+                                {
+                                    <span>, @User.Height см</span>
+                                }
+                                @if (User.IsVerified)
+                                {
+                                    <span class="text-success"> ✔</span>
+                                }
+                                @if (User.HasChildren.HasValue && User.HasChildren.Value)
+                                {
+                                    <span> 👶</span>
+                                }
+                            </h5>
+                            @if (!string.IsNullOrEmpty(User.About))
+                            {
+                                <p>@User.About</p>
+                            }
+                            @if (User.Interests != null && User.Interests.Any())
+                            {
+                                <p>Интересы: @string.Join(", ", User.Interests)</p>
+                            }
+                            <p><span class="small-emoji">📍</span> @(User.CityName ?? ExtractDistanceFromJsonData(User.JsonData))</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th style="width: 50px;">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var action in User.Actions.OrderByDescending(a => a.CreatedDate))
+                                {
+                                    <tr>
+                                        <td>@action.CreatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td class="text-center">
+                                            @(action.ActionType switch
+                                            {
+                                                DatingUserActionType.None => "➖",
+                                                DatingUserActionType.Like => "❤️",
+                                                DatingUserActionType.Dislike => "❌",
+                                                DatingUserActionType.SuperLike => "🔥",
+                                                _ => ""
+                                            })
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public DatingUser User { get; set; }
+
+    private string GetUserName(JsonElement jsonData)
+    {
+        if (jsonData.TryGetProperty("name", out JsonElement nameElement))
+        {
+            return nameElement.GetString();
+        }
+        return string.Empty;
+    }
+
+    private string ExtractDistanceFromJsonData(JsonElement jsonData)
+    {
+        if (jsonData.TryGetProperty("extra", out JsonElement extraElement) &&
+            extraElement.TryGetProperty("distance", out JsonElement distanceElement))
+        {
+            int distanceInMeters = distanceElement.GetInt32();
+            int distanceInKilometers = (int)Math.Round(distanceInMeters / 1000.0);
+
+            return $"{distanceInKilometers} км";
+        }
+
+        return "Неизвестно";
+    }
+}
