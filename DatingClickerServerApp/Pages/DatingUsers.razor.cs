@@ -53,6 +53,7 @@ namespace DatingClickerServerApp.Pages
             {
                 var lowerSearchText = _searchText.ToLower();
                 query = query.Where(u => u.ExternalId.ToLower().Contains(lowerSearchText) ||
+                                         u.Name.ToLower().Contains(lowerSearchText) ||
                                          u.About.ToLower().Contains(lowerSearchText) ||
                                          u.Interests.Any(i => i.ToLower().Equals(lowerSearchText)));
             }

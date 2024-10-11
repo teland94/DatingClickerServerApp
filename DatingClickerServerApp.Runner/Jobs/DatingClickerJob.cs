@@ -32,7 +32,7 @@ namespace DatingClickerServerApp.Runner.Jobs
                     return Task.CompletedTask;
                 };
 
-                await _datingClickerProcessor.ProcessDatingUsers(onlineOnly: false, repeatCount: 1, CancellationToken.None);
+                await _datingClickerProcessor.ProcessDatingUsers(onlineOnly: false, repeatCount: 5, CancellationToken.None);
 
                 _logger.LogInformation("DatingClickerJob execution completed.");
             }

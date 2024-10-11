@@ -24,7 +24,7 @@
 </div>
 
 <div class="input-group mb-3">
-    <input type="text" class="form-control" placeholder="Поиск по ID, описанию или интересам" aria-label="Поиск по ID, описанию или интересам" aria-describedby="button-search"
+    <input type="text" class="form-control" placeholder="Поиск по ID, имени, описанию или интересам" aria-label="Поиск по ID, имени, описанию или интересам" aria-describedby="button-search"
         @bind-value="_searchText" @bind-value:event="oninput" @onkeypress="OnKeyPress">
     <div class="input-group-append">
         <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch" disabled="@string.IsNullOrEmpty(_searchText)">
@@ -46,6 +46,7 @@
             <tr>
                 <th>ID</th>
                 <th>Фото</th>
+                <th>Имя</th>
                 <th>✔</th>
                 <th>Возраст</th>
                 <th>👶</th>
@@ -90,6 +91,7 @@
                             </a>
                         </td>
                         <td><a target="_blank" href="@ExtractShareUrlFromJsonData(user.JsonData)"><img src="@user.PreviewUrl" alt="Превью" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
+                        <td>@user.Name</td>
                         <td>@(user.IsVerified ? "✔" : "")</td>
                         <td>@user.Age</td>
                         <td>@(user.HasChildren.HasValue && user.HasChildren.Value ? "👶" : "")</td>

@@ -191,6 +191,7 @@ namespace DatingClickerServerApp.Common
             else
             {
                 dbDatingUser.UpdatedDate = DateTime.UtcNow;
+                dbDatingUser.Name = datingUser.Name;
                 dbDatingUser.IsVerified = datingUser.IsVerified;
                 dbDatingUser.Age = datingUser.Age;
                 dbDatingUser.HasChildren = datingUser.HasChildren;

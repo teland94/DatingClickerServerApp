@@ -50,6 +50,7 @@ namespace DatingClickerServerApp.Common.Services
             var datingUsers = users.Select(user => new DatingUser
             {
                 ExternalId = user.GetProperty("id").GetInt32().ToString(),
+                Name = user.GetProperty("name").GetString(),
                 IsVerified = user.GetProperty("is_verify").GetBoolean(),
                 Age = user.TryGetProperty("age", out var age) ? age.GetInt32() : null,
                 HasChildren = user.GetProperty("form").TryGetProperty("kids", out var kids) ? kids.GetString() == "yes" : null,
@@ -84,6 +85,7 @@ namespace DatingClickerServerApp.Common.Services
             var datingUser = new DatingUser
             {
                 ExternalId = user.GetProperty("id").GetInt32().ToString(),
+                Name = user.GetProperty("name").GetString(),
                 IsVerified = user.GetProperty("is_verify").GetBoolean(),
                 Age = user.TryGetProperty("age", out var age) ? age.GetInt32() : null,
                 HasChildren = user.GetProperty("form").TryGetProperty("kids", out var kids) ? kids.GetString() == "yes" : null,

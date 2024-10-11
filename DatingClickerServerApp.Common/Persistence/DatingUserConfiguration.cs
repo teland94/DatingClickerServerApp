@@ -25,6 +25,10 @@ namespace DatingClickerServerApp.Common.Persistence
             builder.Property(du => du.UpdatedDate)
                 .IsRequired();
 
+            builder.Property(du => du.Name)
+                .IsRequired(false)
+                .HasMaxLength(100);
+
             builder.Property(du => du.IsVerified)
                 .IsRequired();
 
