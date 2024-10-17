@@ -1,4 +1,5 @@
-﻿using DatingClickerServerApp.Common.Extensions;
+﻿using DatingClickerServerApp.Common.Configuration;
+using DatingClickerServerApp.Common.Extensions;
 using DatingClickerServerApp.Common.Model;
 using DatingClickerServerApp.Common.Persistence;
 using DatingClickerServerApp.Common.Services;
@@ -9,28 +10,28 @@ namespace DatingClickerServerApp.Common
     public class DatingClickerProcessor
     {
         private readonly IDatingClickerService _datingClickerService;
-        private readonly IDictionary<string, string> _signInSettings;
+        private readonly DatingClickerProcessorSettings _settings;
         private readonly AppDbContext _dbContext;
 
         public event Func<string, Task> OnResultUpdated;
 
         public DatingClickerProcessor(
             IDatingClickerService datingClickerService,
-            IDictionary<string, string> signInSettings,
+            DatingClickerProcessorSettings settings,
             AppDbContext dbContext)
         {
             _datingClickerService = datingClickerService;
-            _signInSettings = signInSettings;
+            _settings = settings;
             _dbContext = dbContext;
         }
 
-        public async Task ProcessDatingUsers(bool onlineOnly, int repeatCount, CancellationToken cancellationToken)
+        public async Task ProcessDatingUsers(bool onlineOnly, int repeatCount, CancellationToken cancellationToken = default)
         {
             var random = new Random();
 
             try
             {
-                var user = await _datingClickerService.SignIn(_signInSettings, cancellationToken);
+                var user = await _datingClickerService.SignIn(_settings.SignIn, cancellationToken);
 
                 var isEndOfDayApproaching = IsEndOfDayApproaching();
                 var isUserEnoughSuperLikeCount = user.SuperLikeCount > 0;

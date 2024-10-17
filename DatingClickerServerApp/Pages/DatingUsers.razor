@@ -54,7 +54,7 @@
                 <th>О себе</th>
                 <th>Интересы</th>
                 <th>Локация</th>
-                <th>👀</th>
+                <th class="text-center">👀</th>
                 <th>Дата</th>
             </tr>
         </thead>
@@ -99,7 +99,7 @@
                         <td>@user.About</td>
                         <td>@string.Join(", ", user.Interests)</td>
                         <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
-                        <td class="text-nowrap">
+                        <td class="text-nowrap text-center">
                             @(lastAction.ActionType switch
                             {
                                 DatingUserActionType.None => "➖",

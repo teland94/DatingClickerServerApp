@@ -1,5 +1,7 @@
 ﻿using DatingClickerServerApp.Common;
+using DatingClickerServerApp.Runner.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Quartz;
 using System;
 using System.Threading;
@@ -7,15 +9,18 @@ using System.Threading.Tasks;
 
 namespace DatingClickerServerApp.Runner.Jobs
 {
-    public class DatingClickerJob : IJob
+    internal class DatingClickerJob : IJob
     {
         private readonly DatingClickerProcessor _datingClickerProcessor;
+        private readonly DatingClickerJobSettings _settings;
         private readonly ILogger<DatingClickerJob> _logger;
 
         public DatingClickerJob(DatingClickerProcessor datingClickerProcessor,
+            IOptions<DatingClickerJobSettings> options,
             ILogger<DatingClickerJob> logger)
         {
             _datingClickerProcessor = datingClickerProcessor;
+            _settings = options.Value;
             _logger = logger;
         }
 
@@ -32,7 +37,7 @@ namespace DatingClickerServerApp.Runner.Jobs
                     return Task.CompletedTask;
                 };
 
-                await _datingClickerProcessor.ProcessDatingUsers(onlineOnly: false, repeatCount: 5, CancellationToken.None);
+                await _datingClickerProcessor.ProcessDatingUsers(onlineOnly: false, _settings.ProcessDatingUsersRepeatCount, CancellationToken.None);
 
                 _logger.LogInformation("DatingClickerJob execution completed.");
             }

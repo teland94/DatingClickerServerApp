@@ -1,4 +1,5 @@
 ﻿using DatingClickerServerApp.Common;
+using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Common.Persistence;
 using DatingClickerServerApp.Common.Services;
 using Microsoft.AspNetCore.Components;
@@ -35,7 +36,12 @@ namespace DatingClickerServerApp.Pages
                 _loading = true;
                 _datingResult = string.Empty;
 
-                var processor = new DatingClickerProcessor(DatingClickerService, Configuration.GetSection("SignIn").GetChildren().ToDictionary(s => s.Key, s => s.Value), DbContext);
+                var settings = new DatingClickerProcessorSettings
+                {
+                    SignIn = Configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value)
+                };
+
+                var processor = new DatingClickerProcessor(DatingClickerService, settings, DbContext);
                 processor.OnResultUpdated += UpdateResult;
                 await processor.ProcessDatingUsers(onlineOnly, _repeatCount, _cancellationTokenSource.Token);
             }

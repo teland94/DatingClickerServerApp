@@ -14,6 +14,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 using System.IO;
+using DatingClickerServerApp.Common.Configuration;
+using DatingClickerServerApp.Runner.Configuration;
 
 namespace DatingClickerConsoleApp
 {
@@ -69,10 +71,15 @@ namespace DatingClickerConsoleApp
                             {
                                 var datingClickerService = provider.GetRequiredService<IDatingClickerService>();
                                 var dbContext = provider.GetRequiredService<AppDbContext>();
-                                var signInData = configuration.GetSection("SignIn").GetChildren().ToDictionary(s => s.Key, s => s.Value);
 
-                                return new DatingClickerProcessor(datingClickerService, signInData, dbContext);
-                            });
+                                var settings = new DatingClickerProcessorSettings
+                                {
+                                    SignIn = configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value)
+                                };
+
+                                return new DatingClickerProcessor(datingClickerService, settings, dbContext);
+                            })
+                            .Configure<DatingClickerJobSettings>(configuration.GetSection("DatingClickerJob"));
                     })
                     .Build();
 
