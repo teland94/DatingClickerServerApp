@@ -72,7 +72,7 @@ namespace DatingClickerServerApp.Pages
 
         private ValueTask ScrollToBottom()
         {
-            return JSRuntime.InvokeVoidAsync("scrollToBottom");
+            return JSRuntime.InvokeVoidAsync("scrollToBottom", "datingResultContainer");
         }
 
         private static string HighlightResult(string result)

@@ -147,8 +147,7 @@ namespace DatingClickerServerApp.Pages
         {
             _selectedUser = user;
 
-            var modal = await JSRuntime.InvokeAsync<IJSObjectReference>("bootstrap.Modal.getOrCreateInstance", "#userModal");
-            await modal.InvokeVoidAsync("show");
+            await JSRuntime.InvokeVoidAsync("showUserModal");
         }
     }
 }
