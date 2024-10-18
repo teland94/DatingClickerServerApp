@@ -28,6 +28,7 @@ namespace DatingClickerServerApp.Common
         public async Task ProcessDatingUsers(bool onlineOnly, int repeatCount, CancellationToken cancellationToken = default)
         {
             var random = new Random();
+            var processedUserIds = new HashSet<string>();
 
             try
             {
@@ -43,15 +44,19 @@ namespace DatingClickerServerApp.Common
 
                     var datingUsers = await _datingClickerService.GetRecommendedUsers(onlineOnly, cancellationToken);
 
-                    if (datingUsers.Count > 0)
+                    var newDatingUsers = datingUsers.Where(du => !processedUserIds.Contains(du.ExternalId)).ToList();
+
+                    if (newDatingUsers.Count > 0)
                     {
                         var counter = 0;
 
-                        foreach (var datingUser in datingUsers)
+                        foreach (var datingUser in newDatingUsers)
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
                             var (result, actionType) = await DetermineAction(datingUser, user, superLikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, ++counter, cancellationToken);
+
+                            processedUserIds.Add(datingUser.ExternalId);
 
                             await SaveDatingUser(datingUser, actionType, cancellationToken);
 
