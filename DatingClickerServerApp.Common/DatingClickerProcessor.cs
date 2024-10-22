@@ -93,10 +93,18 @@ namespace DatingClickerServerApp.Common
 
             var existingUser = await _dbContext.DatingUsers
                 .Include(u => u.Actions)
+                .Include(u => u.BlacklistedDatingUser)
                 .FirstOrDefaultAsync(u => u.ExternalId == datingUser.ExternalId, cancellationToken);
 
             if (existingUser != null)
             {
+                if (existingUser.BlacklistedDatingUser != null)
+                {
+                    result = $"Dislike (Blacklisted): {await _datingClickerService.DislikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
+                    
+                    return (result, DatingUserActionType.Dislike);
+                }
+
                 var userHasExistingSuperLikeAction = existingUser.Actions
                     .Any(a => a.ActionType == DatingUserActionType.SuperLike);
 

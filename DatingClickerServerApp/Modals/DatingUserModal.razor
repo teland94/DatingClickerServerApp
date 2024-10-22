@@ -13,7 +13,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-flex align-items-center mb-3">
-                        <img src="@User.PreviewUrl" alt="Аватарка" class="img-thumbnail me-3">
+                        <a target="_blank" href="@ExtractShareUrlFromJsonData(User.JsonData)" class="me-3"><img src="@User.PreviewUrl" alt="Аватарка" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain"></a>
                         <div>
                             <h5>
                                 <span>@User.Name, @User.Age</span>
@@ -28,6 +28,10 @@
                                 @if (User.HasChildren.HasValue && User.HasChildren.Value)
                                 {
                                     <span> 👶</span>
+                                }
+                                @if (User.BlacklistedDatingUser != null)
+                                {
+                                    <span> 🚫</span>
                                 }
                             </h5>
                             @if (!string.IsNullOrEmpty(User.About))
@@ -71,6 +75,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    @if (User.BlacklistedDatingUser == null)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="() => OnAddToBlacklistClick.InvokeAsync(User)" data-bs-dismiss="modal">Добавить в ЧС</button>
+                    }
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 </div>
             </div>
@@ -80,6 +88,13 @@
 
 @code {
     [Parameter] public DatingUser User { get; set; }
+
+    [Parameter] public EventCallback<DatingUser> OnAddToBlacklistClick { get; set; }
+
+    private static string ExtractShareUrlFromJsonData(JsonElement jsonElement)
+    {
+        return jsonElement.TryGetProperty("share_url", out var shareUrl) ? shareUrl.GetString() : null;
+    }
 
     private string ExtractDistanceFromJsonData(JsonElement jsonData)
     {

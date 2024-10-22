@@ -36,7 +36,9 @@ namespace DatingClickerServerApp.Pages
         private async Task LoadUsers()
         {
             using var dbContext = DbContextFactory.CreateDbContext();
-            IQueryable<DatingUser> query = dbContext.DatingUsers.Include(u => u.Actions);
+            IQueryable<DatingUser> query = dbContext.DatingUsers
+                .Include(u => u.Actions)
+                .Include(u => u.BlacklistedDatingUser);
 
             if (_onlyVerified)
             {
@@ -148,6 +150,38 @@ namespace DatingClickerServerApp.Pages
             _selectedUser = user;
 
             await JSRuntime.InvokeVoidAsync("showUserModal");
+        }
+
+        private async Task AddToBlacklist(DatingUser user)
+        {
+            using var dbContext = DbContextFactory.CreateDbContext();
+
+            var isAlreadyBlacklisted = await dbContext.BlacklistedDatingUsers
+                .AnyAsync(b => b.Id == user.Id);
+
+            if (!isAlreadyBlacklisted)
+            {
+                var blacklistedUser = new BlacklistedDatingUser
+                {
+                    Id = user.Id,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await dbContext.BlacklistedDatingUsers.AddAsync(blacklistedUser);
+                await dbContext.SaveChangesAsync();
+
+                var userInList = _users.FirstOrDefault(u => u.Id == user.Id);
+                if (userInList != null)
+                {
+                    userInList.BlacklistedDatingUser = blacklistedUser;
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                throw new InvalidOperationException($"{user.Name} уже находится в черном списке.");
+            }
         }
     }
 }

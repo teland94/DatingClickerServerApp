@@ -103,7 +103,7 @@ namespace DatingClickerServerApp.Common.Services
         //Лайк: рост 155 и выше, без детей (!Есть дети), исключить из описания заданные ключевые слова, исключить анкеты без активности в течение недели
         public bool IsUserLikeable(DatingUser user)
         {
-            string[] exclusionWords = ["plus size", "plus-size", "мужчину для кое чего интересного", "которому смогу показать себя"];
+            string[] exclusionWords = ["plus size", "plus-size", "мужчину для кое чего интересного", "показать себя", "покажу себя"];
 
             var lastActiveAt = user.JsonData.GetProperty("last_active_at").GetDateTime();
             var oneWeekAgo = DateTime.UtcNow.AddDays(-7);

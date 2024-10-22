@@ -33,5 +33,7 @@ namespace DatingClickerServerApp.Common.Model
         public JsonElement JsonData { get; set; }
 
         public ICollection<DatingUserAction> Actions { get; set; }
+
+        public BlacklistedDatingUser BlacklistedDatingUser { get; set; }
     }
 }
