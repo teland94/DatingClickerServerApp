@@ -2,6 +2,7 @@
 using DatingClickerServerApp.Common.Model;
 using DatingClickerServerApp.Common.Persistence;
 using DatingClickerServerApp.Common.Services;
+using DatingClickerServerApp.Components.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,25 @@ namespace DatingClickerServerApp.Pages
 {
     public partial class DatingUsers : ComponentBase
     {
+        private readonly List<SelectableItem<DatingUserActionType>> _selectableAllActionTypes = Enum.GetValues<DatingUserActionType>()
+            .Select(action => new SelectableItem<DatingUserActionType>
+            {
+                Item = action,
+                IsSelected = false
+            }).ToList();
+        private readonly List<SelectableItem<DatingUserActionType>> _selectableLastActionTypes = Enum.GetValues<DatingUserActionType>()
+            .Select(action => new SelectableItem<DatingUserActionType>
+            {
+                Item = action,
+                IsSelected = false
+            }).ToList();
+
         private List<DatingUser> _users;
+
         private bool _onlyVerified = false;
         private bool _onlyToday = true;
+        private ICollection<DatingUserActionType> _selectedAllActionTypes = [];
+        private ICollection<DatingUserActionType> _selectedLastActionTypes = [];
         private string _searchText = string.Empty;
 
         private int _currentPage = 1;
@@ -36,8 +53,9 @@ namespace DatingClickerServerApp.Pages
         private async Task LoadUsers()
         {
             using var dbContext = DbContextFactory.CreateDbContext();
+
             IQueryable<DatingUser> query = dbContext.DatingUsers
-                .Include(u => u.Actions)
+                .Include(u => u.Actions.OrderByDescending(a => a.CreatedDate))
                 .Include(u => u.BlacklistedDatingUser);
 
             if (_onlyVerified)
@@ -48,7 +66,17 @@ namespace DatingClickerServerApp.Pages
             if (_onlyToday)
             {
                 var startOfToday = DateTime.UtcNow.GetStartOfDay();
-                query = query.Where(u => u.Actions.Any(a => a.CreatedDate >= startOfToday));
+                query = query.Where(u => u.UpdatedDate >= startOfToday);
+            }
+
+            if (_selectedAllActionTypes.Count != 0)
+            {
+                query = query.Where(u => u.Actions.Any(a => _selectedAllActionTypes.Any(sa => sa == a.ActionType)));
+            }
+
+            if (_selectedLastActionTypes.Count != 0)
+            {
+                query = query.Where(u => _selectedLastActionTypes.Any(sa => sa == u.Actions.First().ActionType));
             }
 
             if (!string.IsNullOrEmpty(_searchText))

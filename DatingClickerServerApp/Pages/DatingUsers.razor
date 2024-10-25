@@ -3,6 +3,7 @@
 @using DatingClickerServerApp.Common.Model
 @using DatingClickerServerApp.Common.Persistence
 @using DatingClickerServerApp.Components
+@using DatingClickerServerApp.Extensions
 @using DatingClickerServerApp.Modals
 @using Microsoft.EntityFrameworkCore
 
@@ -20,6 +21,16 @@
         <label class="form-check-label" for="onlyToday">
             Только сегодняшние
         </label>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <MultiSelectDropdown TItem="DatingUserActionType" 
+                             Items="_selectableAllActionTypes" 
+                             ItemTextSelector="@(option => option.GetName())" 
+                             NoSelectionText="Фильтр по типу всех действий" 
+                             OnSelectionChanged="async selectedItems => { _selectedAllActionTypes = selectedItems; await OnSearch(); }" />
     </div>
 </div>
 
@@ -64,18 +75,7 @@
             {
                 @foreach (var user in _users)
                 {
-                    var actionGroups = user.Actions
-                        .GroupBy(a => a.DatingUserId)
-                        .Select(g => new
-                        {
-                            DatingUserId = g.Key,
-                            ActionType = g.Last().ActionType,
-                            Count = g.Count(),
-                            LatestDate = g.Max(a => a.CreatedDate)
-                        })
-                        .ToList();
-
-                    var lastAction = actionGroups.OrderByDescending(ag => ag.LatestDate).FirstOrDefault();
+                    var lastAction = user.Actions.FirstOrDefault();
 
                     var rowClass = lastAction.ActionType switch
                     {
@@ -101,21 +101,14 @@
                         <td>@string.Join(", ", user.Interests)</td>
                         <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
                         <td class="text-nowrap text-center">
-                            @(lastAction.ActionType switch
-                            {
-                                DatingUserActionType.None => "➖",
-                                DatingUserActionType.Like => "❤️",
-                                DatingUserActionType.Dislike => "❌",
-                                DatingUserActionType.SuperLike => "🔥",
-                                _ => ""
-                            })
-                            @if (actionGroups.Any(ag => ag.Count > 1))
+                            @lastAction.ActionType.GetShortName()
+                            @if (user.Actions.Count > 1)
                             {
                                 <span>*</span>
                             }
                         </td>
                         <td>@(user.BlacklistedDatingUser != null ? "🚫" : "")</td>
-                        <td>@actionGroups.Max(ag => ag.LatestDate.ConvertToLocalTime()).ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@user.UpdatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                     </tr>
                 }
             }

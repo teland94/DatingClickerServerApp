@@ -1,6 +1,7 @@
 ﻿@using DatingClickerServerApp.Common.Model
 @using DatingClickerServerApp.Common.Extensions
 @using System.Text.Json
+@using DatingClickerServerApp.Extensions
 
 <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -54,19 +55,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var action in User.Actions.OrderByDescending(a => a.CreatedDate))
+                                @foreach (var action in User.Actions)
                                 {
                                     <tr>
                                         <td>@action.CreatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                                         <td class="text-center">
-                                            @(action.ActionType switch
-                                            {
-                                                DatingUserActionType.None => "➖",
-                                                DatingUserActionType.Like => "❤️",
-                                                DatingUserActionType.Dislike => "❌",
-                                                DatingUserActionType.SuperLike => "🔥",
-                                                _ => ""
-                                            })
+                                            @action.ActionType.GetShortName()
                                         </td>
                                     </tr>
                                 }
