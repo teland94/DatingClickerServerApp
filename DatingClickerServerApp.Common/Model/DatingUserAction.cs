@@ -8,5 +8,8 @@
 
         public DatingUser DatingUser { get; set; }
         public Guid DatingUserId { get; set; }
+
+        public DatingAccount DatingAccount { get; set; }
+        public Guid? DatingAccountId { get; set; }
     }
 }

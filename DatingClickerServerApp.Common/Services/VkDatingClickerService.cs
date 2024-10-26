@@ -1,5 +1,6 @@
-﻿using DatingClickerServerApp.Common.Model;
-using DatingClickerServerApp.Common.Persistence;
+﻿using DatingClickerServerApp.Common.Configuration;
+using DatingClickerServerApp.Common.Model;
+using DatingClickerServerApp.Common.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Text;
@@ -14,7 +15,7 @@ namespace DatingClickerServerApp.Common.Services
 
         private string _token = string.Empty;
 
-        public VkDatingClickerService(AppDbContext dbContext)
+        public VkDatingClickerService()
         {
             _client = new HttpClient();
         }
@@ -100,28 +101,36 @@ namespace DatingClickerServerApp.Common.Services
             return datingUser;
         }
 
-        //Лайк: рост 155 и выше, без детей (!Есть дети), исключить из описания заданные ключевые слова, исключить анкеты без активности в течение недели
-        public bool IsUserLikeable(DatingUser user)
+        public bool IsUserLikeable(DatingUser user, DatingUserCriteriesSettings datingUserCriteriesInfo)
         {
-            string[] exclusionWords = ["plus size", "plus-size", "мужчину для кое чего интересного", "показать себя", "покажу себя"];
+            var exclusionWords = datingUserCriteriesInfo.ExclusionWords ?? [];
+            var requiredInterests = datingUserCriteriesInfo.Interests ?? [];
 
             var lastActiveAt = user.JsonData.GetProperty("last_active_at").GetDateTime();
             var oneWeekAgo = DateTime.UtcNow.AddDays(-7);
 
-            return (!user.Height.HasValue || user.Height >= 155)
-                && user.HasChildren != true
-                && !exclusionWords.Any(word => user.About.Contains(word, StringComparison.OrdinalIgnoreCase))
-                && lastActiveAt >= oneWeekAgo;
+            return lastActiveAt >= oneWeekAgo
+                && (!user.Height.HasValue || user.Height >= datingUserCriteriesInfo.Height)
+                && (!datingUserCriteriesInfo.IsVerified.HasValue || user.IsVerified == datingUserCriteriesInfo.IsVerified)
+                && (!datingUserCriteriesInfo.HasChildren.HasValue || !user.HasChildren.HasValue || user.HasChildren == datingUserCriteriesInfo.HasChildren)
+                && (exclusionWords.Count == 0 || !exclusionWords.Any(word => user.About.Contains(word, StringComparison.OrdinalIgnoreCase)))
+                && (requiredInterests.Count == 0 || requiredInterests.Any(interest => user.Interests.Contains(interest, StringComparer.OrdinalIgnoreCase)));
         }
 
-        public bool IsUserSuperLikeable(DatingUser user, DatingUserCriteriesInfo datingUserCriteriesInfo = null)
+        public bool IsUserSuperLikeable(DatingUser user, DatingUserCriteriesSettings datingUserCriteriesInfo)
         {
-            var requiredInterests = datingUserCriteriesInfo?.Interests ?? [];
+            var exclusionWords = datingUserCriteriesInfo.ExclusionWords ?? [];
+            var requiredInterests = datingUserCriteriesInfo.Interests ?? [];
 
-            return user.Height >= (datingUserCriteriesInfo?.Height ?? 165)
-                && user.IsVerified
-                && (requiredInterests.Count == 0 || requiredInterests.Any(interest => user.Interests.Contains(interest, StringComparer.OrdinalIgnoreCase)))
-                && IsUserLikeable(user);
+            var lastActiveAt = user.JsonData.GetProperty("last_active_at").GetDateTime();
+            var oneWeekAgo = DateTime.UtcNow.AddDays(-7);
+
+            return lastActiveAt >= oneWeekAgo
+                && (!user.Height.HasValue || user.Height >= datingUserCriteriesInfo.Height)
+                && (!datingUserCriteriesInfo.IsVerified.HasValue || user.IsVerified == datingUserCriteriesInfo.IsVerified)
+                && (!datingUserCriteriesInfo.HasChildren.HasValue || user.HasChildren == datingUserCriteriesInfo.HasChildren)
+                && (exclusionWords.Count == 0 || !exclusionWords.Any(word => user.About.Contains(word, StringComparison.OrdinalIgnoreCase)))
+                && (requiredInterests.Count == 0 || requiredInterests.Any(interest => user.Interests.Contains(interest, StringComparer.OrdinalIgnoreCase)));
         }
 
         public async Task<string> LikeUser(string userId, CancellationToken cancellationToken = default)
@@ -188,7 +197,7 @@ namespace DatingClickerServerApp.Common.Services
             return likeJsonFormatted;
         }
 
-        public async Task<User> SignIn(IDictionary<string, string> signInSettings, CancellationToken cancellationToken)
+        public async Task<DatingAppUser> SignIn(IDictionary<string, string> signInSettings, CancellationToken cancellationToken)
         {
             var vkParams = await GetVkParams(signInSettings["p"], signInSettings["remixsid"], cancellationToken);
 
@@ -232,7 +241,7 @@ namespace DatingClickerServerApp.Common.Services
             }
         }
 
-        private async Task<User> AuthSignIn(string launchUrl, CancellationToken cancellationToken = default)
+        private async Task<DatingAppUser> AuthSignIn(string launchUrl, CancellationToken cancellationToken = default)
         {
             var signInRequest = new HttpRequestMessage(HttpMethod.Post, "https://dating.vk.com/api/auth.signIn")
             {
@@ -256,9 +265,11 @@ namespace DatingClickerServerApp.Common.Services
             var signInJson = JsonDocument.Parse(signInResponseString);
             _token = signInJson.RootElement.GetProperty("token").GetString();
 
-            return new User
+            return new DatingAppUser
             {
-                SuperLikeCount = signInJson.RootElement.GetProperty("user").GetProperty("super_like_count").GetInt32()
+                UserId = signInJson.RootElement.GetProperty("user").GetProperty("id").GetInt32().ToString(),
+                SuperLikeCount = signInJson.RootElement.GetProperty("user").GetProperty("super_like_count").GetInt32(),
+                JsonData = signInJson.RootElement
             };
         }
 

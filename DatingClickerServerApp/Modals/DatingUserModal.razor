@@ -51,7 +51,8 @@
                             <thead>
                                 <tr>
                                     <th>Дата</th>
-                                    <th style="width: 50px;">Действие</th>
+                                    <th class="text-center" style="width: 50px;">Действие</th>
+                                    <th class="text-center">ID аккаунта</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -59,9 +60,8 @@
                                 {
                                     <tr>
                                         <td>@action.CreatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                                        <td class="text-center">
-                                            @action.ActionType.GetShortName()
-                                        </td>
+                                        <td class="text-center">@action.ActionType.GetShortName()</td>
+                                        <td class="text-center">@action.DatingAccount?.AppUserId</td>
                                     </tr>
                                 }
                             </tbody>

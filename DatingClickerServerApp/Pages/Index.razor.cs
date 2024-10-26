@@ -1,7 +1,7 @@
 ﻿using DatingClickerServerApp.Common;
 using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Common.Persistence;
-using DatingClickerServerApp.Common.Services;
+using DatingClickerServerApp.Common.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -18,6 +18,7 @@ namespace DatingClickerServerApp.Pages
         [Inject] private IConfiguration Configuration { get; set; }
         [Inject] private AppDbContext DbContext { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; }
+        [Inject] private IEncryptionService EncryptionService { get; set; }
 
 
         public void Dispose()
@@ -38,10 +39,12 @@ namespace DatingClickerServerApp.Pages
 
                 var settings = new DatingClickerProcessorSettings
                 {
-                    SignIn = Configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value)
+                    SignIn = Configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value),
+                    LikeCriteries = Configuration.GetSection(nameof(DatingClickerProcessorSettings.LikeCriteries)).Get<DatingUserCriteriesSettings>()
+                     ?? new DatingUserCriteriesSettings(155, [], ["plus size", "plus-size", "мужчину для кое чего интересного", "показать себя", "покажу себя"], null, false)
                 };
 
-                var processor = new DatingClickerProcessor(DatingClickerService, settings, DbContext);
+                var processor = new DatingClickerProcessor(DatingClickerService, settings, DbContext, EncryptionService);
                 processor.OnResultUpdated += UpdateResult;
                 await processor.ProcessDatingUsers(onlineOnly, _repeatCount, _cancellationTokenSource.Token);
             }

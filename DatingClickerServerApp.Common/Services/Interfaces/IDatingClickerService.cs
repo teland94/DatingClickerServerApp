@@ -1,6 +1,7 @@
-﻿using DatingClickerServerApp.Common.Model;
+﻿using DatingClickerServerApp.Common.Configuration;
+using DatingClickerServerApp.Common.Model;
 
-namespace DatingClickerServerApp.Common.Services
+namespace DatingClickerServerApp.Common.Services.Interfaces
 {
     public interface IDatingClickerService
     {
@@ -8,9 +9,9 @@ namespace DatingClickerServerApp.Common.Services
 
         Task<DatingUser> GetRecommendedUser(string externalId, CancellationToken cancellationToken = default);
 
-        bool IsUserLikeable(DatingUser user);
+        bool IsUserLikeable(DatingUser user, DatingUserCriteriesSettings datingUserCriteriesInfo);
 
-        bool IsUserSuperLikeable(DatingUser user, DatingUserCriteriesInfo datingUserCriteriesInfo = null);
+        bool IsUserSuperLikeable(DatingUser user, DatingUserCriteriesSettings datingUserCriteriesInfo);
 
         Task<string> LikeUser(string externalId, CancellationToken cancellationToken = default);
 
@@ -18,6 +19,6 @@ namespace DatingClickerServerApp.Common.Services
 
         Task<string> SuperLikeUser(string externalId, string superLikeText = null, CancellationToken cancellationToken = default);
 
-        Task<User> SignIn(IDictionary<string, string> signInSettings, CancellationToken cancellationToken);
+        Task<DatingAppUser> SignIn(IDictionary<string, string> signInSettings, CancellationToken cancellationToken);
     }
 }

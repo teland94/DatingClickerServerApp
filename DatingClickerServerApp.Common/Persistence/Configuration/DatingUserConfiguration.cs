@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace DatingClickerServerApp.Common.Persistence
+namespace DatingClickerServerApp.Common.Persistence.Configuration
 {
     public class DatingUserConfiguration : IEntityTypeConfiguration<DatingUser>
     {

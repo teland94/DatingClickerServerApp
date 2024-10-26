@@ -1,7 +1,7 @@
 ﻿using DatingClickerServerApp.Common.Extensions;
 using DatingClickerServerApp.Common.Model;
 using DatingClickerServerApp.Common.Persistence;
-using DatingClickerServerApp.Common.Services;
+using DatingClickerServerApp.Common.Services.Interfaces;
 using DatingClickerServerApp.Components.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -56,6 +56,7 @@ namespace DatingClickerServerApp.Pages
 
             IQueryable<DatingUser> query = dbContext.DatingUsers
                 .Include(u => u.Actions.OrderByDescending(a => a.CreatedDate))
+                    .ThenInclude(a => a.DatingAccount)
                 .Include(u => u.BlacklistedDatingUser);
 
             if (_onlyVerified)

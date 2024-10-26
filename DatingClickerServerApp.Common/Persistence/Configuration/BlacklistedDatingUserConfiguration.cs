@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 
-namespace DatingClickerServerApp.Common.Persistence
+namespace DatingClickerServerApp.Common.Persistence.Configuration
 {
     public class BlacklistedDatingUserConfiguration : IEntityTypeConfiguration<BlacklistedDatingUser>
     {
@@ -12,7 +12,7 @@ namespace DatingClickerServerApp.Common.Persistence
 
             builder.HasOne(bdu => bdu.DatingUser)
                 .WithOne(du => du.BlacklistedDatingUser)
-                .HasForeignKey<BlacklistedDatingUser>(bdu => bdu.Id)  
+                .HasForeignKey<BlacklistedDatingUser>(bdu => bdu.Id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(bdu => bdu.CreatedDate)

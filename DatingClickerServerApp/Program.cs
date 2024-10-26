@@ -1,5 +1,7 @@
+using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Common.Persistence;
 using DatingClickerServerApp.Common.Services;
+using DatingClickerServerApp.Common.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Reflection;
@@ -21,9 +23,12 @@ namespace DatingClickerServerApp
             builder.Services.AddServerSideBlazor();
 
             builder.Services.AddScoped<IDatingClickerService, VkDatingClickerService>();
+            builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.Configure<EncryptionSettings>(builder.Configuration.GetSection("Encryption"));
 
             var app = builder.Build();
 

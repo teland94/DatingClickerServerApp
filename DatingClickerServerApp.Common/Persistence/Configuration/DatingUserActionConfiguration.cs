@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace DatingClickerServerApp.Common.Persistence
+namespace DatingClickerServerApp.Common.Persistence.Configuration
 {
     public class DatingUserActionConfiguration : IEntityTypeConfiguration<DatingUserAction>
     {
@@ -24,6 +24,10 @@ namespace DatingClickerServerApp.Common.Persistence
             builder.HasOne(dua => dua.DatingUser)
                 .WithMany(du => du.Actions)
                 .HasForeignKey(dua => dua.DatingUserId);
+
+            builder.HasOne(dua => dua.DatingAccount)
+                .WithMany(du => du.Actions)
+                .HasForeignKey(dua => dua.DatingAccountId);
         }
     }
 }

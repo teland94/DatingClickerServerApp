@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Runner.Configuration;
+using DatingClickerServerApp.Common.Services.Interfaces;
 
 namespace DatingClickerConsoleApp
 {
@@ -65,21 +66,25 @@ namespace DatingClickerConsoleApp
                             })
                             .AddQuartzHostedService(q => q.WaitForJobsToComplete = true)
                             .AddScoped<IDatingClickerService, VkDatingClickerService>()
+                            .AddSingleton<IEncryptionService, EncryptionService>()
                             .AddDbContext<AppDbContext>(options =>
                                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
                             .AddScoped(provider =>
                             {
                                 var datingClickerService = provider.GetRequiredService<IDatingClickerService>();
                                 var dbContext = provider.GetRequiredService<AppDbContext>();
+                                var encryptionService = provider.GetRequiredService<IEncryptionService>();
 
                                 var settings = new DatingClickerProcessorSettings
                                 {
-                                    SignIn = configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value)
+                                    SignIn = configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value),
+                                    LikeCriteries = configuration.GetSection(nameof(DatingClickerProcessorSettings.LikeCriteries)).Get<DatingUserCriteriesSettings>()
                                 };
 
-                                return new DatingClickerProcessor(datingClickerService, settings, dbContext);
+                                return new DatingClickerProcessor(datingClickerService, settings, dbContext, encryptionService);
                             })
-                            .Configure<DatingClickerJobSettings>(configuration.GetSection("DatingClickerJob"));
+                            .Configure<DatingClickerJobSettings>(configuration.GetSection("DatingClickerJob"))
+                            .Configure<EncryptionSettings>(configuration.GetSection("Encryption"));
                     })
                     .Build();
 

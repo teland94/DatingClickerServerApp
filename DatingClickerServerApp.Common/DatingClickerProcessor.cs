@@ -2,8 +2,9 @@
 using DatingClickerServerApp.Common.Extensions;
 using DatingClickerServerApp.Common.Model;
 using DatingClickerServerApp.Common.Persistence;
-using DatingClickerServerApp.Common.Services;
+using DatingClickerServerApp.Common.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace DatingClickerServerApp.Common
 {
@@ -12,17 +13,20 @@ namespace DatingClickerServerApp.Common
         private readonly IDatingClickerService _datingClickerService;
         private readonly DatingClickerProcessorSettings _settings;
         private readonly AppDbContext _dbContext;
+        private readonly IEncryptionService _encryptionService;
 
         public event Func<string, Task> OnResultUpdated;
 
         public DatingClickerProcessor(
             IDatingClickerService datingClickerService,
             DatingClickerProcessorSettings settings,
-            AppDbContext dbContext)
+            AppDbContext dbContext,
+            IEncryptionService encryptionService)
         {
             _datingClickerService = datingClickerService;
             _settings = settings;
             _dbContext = dbContext;
+            _encryptionService = encryptionService;
         }
 
         public async Task ProcessDatingUsers(bool onlineOnly, int repeatCount, CancellationToken cancellationToken = default)
@@ -32,10 +36,10 @@ namespace DatingClickerServerApp.Common
 
             try
             {
-                var user = await _datingClickerService.SignIn(_settings.SignIn, cancellationToken);
+                var user = await SignIn(cancellationToken);
 
                 var isEndOfDayApproaching = IsEndOfDayApproaching();
-                var isUserEnoughSuperLikeCount = user.SuperLikeCount > 0;
+                var isUserEnoughSuperLikeCount = user.Item1.SuperLikeCount > 0;
                 var superLikeCriteries = GetSuperLikeCriteries(isUserEnoughSuperLikeCount, isEndOfDayApproaching);
 
                 for (int i = 0; i < repeatCount; i++)
@@ -54,11 +58,11 @@ namespace DatingClickerServerApp.Common
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            var (result, actionType) = await DetermineAction(datingUser, user, superLikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, ++counter, cancellationToken);
+                            var (result, actionType) = await DetermineAction(datingUser, user.Item1, superLikeCriteries, _settings.LikeCriteries, isEndOfDayApproaching, isUserEnoughSuperLikeCount, ++counter, cancellationToken);
 
                             processedUserIds.Add(datingUser.ExternalId);
 
-                            await SaveDatingUser(datingUser, actionType, cancellationToken);
+                            await SaveDatingUser(datingUser, actionType, user.Item2.Id, cancellationToken);
 
                             OnResultUpdated?.Invoke(result);
 
@@ -86,7 +90,15 @@ namespace DatingClickerServerApp.Common
             }
         }
 
-        private async Task<(string result, DatingUserActionType actionType)> DetermineAction(DatingUser datingUser, User user, DatingUserCriteriesInfo superLikeCriteries, bool isEndOfDayApproaching, bool isUserEnoughSuperLikeCount, int counter, CancellationToken cancellationToken)
+        private async Task<(string result, DatingUserActionType actionType)> DetermineAction(
+            DatingUser datingUser, 
+            DatingAppUser user,
+            DatingUserCriteriesSettings datingUserSuperLikeCriteriesSettings,
+            DatingUserCriteriesSettings datingUserLikeCriteriesSettings, 
+            bool isEndOfDayApproaching, 
+            bool isUserEnoughSuperLikeCount, 
+            int counter,
+            CancellationToken cancellationToken)
         {
             string result;
             DatingUserActionType actionType;
@@ -116,7 +128,7 @@ namespace DatingClickerServerApp.Common
                 }
             }
 
-            if (_datingClickerService.IsUserSuperLikeable(datingUser, superLikeCriteries))
+            if (_datingClickerService.IsUserSuperLikeable(datingUser, datingUserSuperLikeCriteriesSettings))
             {
                 if (isUserEnoughSuperLikeCount)
                 {
@@ -135,7 +147,7 @@ namespace DatingClickerServerApp.Common
                     actionType = DatingUserActionType.None;
                 }
             }
-            else if (_datingClickerService.IsUserLikeable(datingUser))
+            else if (_datingClickerService.IsUserLikeable(datingUser, datingUserLikeCriteriesSettings))
             {
                 result = $"Like: {await _datingClickerService.LikeUser(datingUser.ExternalId, cancellationToken)}, {datingUser.CityName}, {counter} {(datingUser.IsVerified ? "✓" : string.Empty)}\n";
                 actionType = DatingUserActionType.Like;
@@ -149,22 +161,57 @@ namespace DatingClickerServerApp.Common
             return (result, actionType);
         }
 
+        private async Task<Tuple<DatingAppUser, DatingAccount>> SignIn(CancellationToken cancellationToken)
+        {
+            var user = await _datingClickerService.SignIn(_settings.SignIn, cancellationToken);
+
+            var dbDatingAccount = await _dbContext.DatingAccounts.FirstOrDefaultAsync(da => da.AppUserId == user.UserId, cancellationToken);
+
+            if (dbDatingAccount != null)
+            {
+                dbDatingAccount.UpdatedDate = DateTime.UtcNow;
+                dbDatingAccount.JsonProfileData = user.JsonData;
+
+                _dbContext.DatingAccounts.Update(dbDatingAccount);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                var datingAccount = new DatingAccount
+                {
+                    AppUserId = user.UserId,
+                    AppName = DatingAppNameType.VkDating,
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow,
+                    JsonAuthData = _encryptionService.Encrypt(JsonSerializer.Serialize(_settings.SignIn)),
+                    JsonProfileData = user.JsonData
+                };
+
+                var entityEntry = await _dbContext.DatingAccounts.AddAsync(datingAccount, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                dbDatingAccount = entityEntry.Entity;
+            }
+
+            return new Tuple<DatingAppUser, DatingAccount>(user, dbDatingAccount);
+        }
+
         private static async Task RandomDelay(Random random, int minMilliseconds, int maxMilliseconds, CancellationToken cancellationToken)
         {
             await Task.Delay(random.Next(minMilliseconds, maxMilliseconds), cancellationToken);
         }
 
-        private static DatingUserCriteriesInfo GetSuperLikeCriteries(bool isUserEnoughSuperLikeCount, bool isSmoothCriteries = false)
+        private DatingUserCriteriesSettings GetSuperLikeCriteries(bool isUserEnoughSuperLikeCount, bool isSmoothCriteries = false)
         {
             if (!isSmoothCriteries || !isUserEnoughSuperLikeCount)
             {
-                // Обычные критерии
-                return new DatingUserCriteriesInfo(165, ["IT"]);
+                //Обычные критерии
+                return new DatingUserCriteriesSettings(165, ["IT"], _settings.LikeCriteries.ExclusionWords ?? [], true, false);
             }
             else
             {
-                // Смягченные критерии
-                return new DatingUserCriteriesInfo(170, []); // Убираем требование по интересам
+                //Смягченные критерии
+                return new DatingUserCriteriesSettings(170, [], _settings.LikeCriteries.ExclusionWords ?? [], true, false); // Убираем требование по интересам
             }
         }
 
@@ -182,7 +229,7 @@ namespace DatingClickerServerApp.Common
             return currentTime.ConvertToLocalTime() >= oneHourBeforeEndOfDay;
         }
 
-        private async Task SaveDatingUser(DatingUser datingUser, DatingUserActionType actionType, CancellationToken cancellationToken)
+        private async Task SaveDatingUser(DatingUser datingUser, DatingUserActionType actionType, Guid datingAccountId, CancellationToken cancellationToken)
         {
             var dbDatingUser = await _dbContext.DatingUsers.FirstOrDefaultAsync(du => du.ExternalId == datingUser.ExternalId, cancellationToken);
 
@@ -196,7 +243,8 @@ namespace DatingClickerServerApp.Common
                     new DatingUserAction
                     {
                         CreatedDate = DateTime.UtcNow,
-                        ActionType = actionType
+                        ActionType = actionType,
+                        DatingAccountId = datingAccountId
                     }
                 ];
 
@@ -222,7 +270,8 @@ namespace DatingClickerServerApp.Common
                 {
                     CreatedDate = DateTime.UtcNow,
                     ActionType = actionType,
-                    DatingUserId = dbDatingUser.Id
+                    DatingUserId = dbDatingUser.Id,
+                    DatingAccountId = datingAccountId
                 }, cancellationToken);
             }
 
