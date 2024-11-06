@@ -91,7 +91,7 @@
                                 @user.ExternalId
                             </a>
                         </td>
-                        <td><a target="_blank" href="@ExtractShareUrlFromJsonData(user.JsonData)"><img src="@user.PreviewUrl" alt="Превью" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
+                        <td><a target="_blank" href="@user.JsonData.ExtractShareUrl()"><img src="@user.PreviewUrl" alt="Превью" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
                         <td>@user.Name</td>
                         <td>@(user.IsVerified ? "✔" : "")</td>
                         <td>@user.Age</td>
@@ -99,7 +99,7 @@
                         <td>@user.Height</td>
                         <td>@user.About</td>
                         <td>@string.Join(", ", user.Interests)</td>
-                        <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? ExtractDistanceFromJsonData(user.JsonData))</td>
+                        <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? user.JsonData.ExtractDistance())</td>
                         <td class="text-nowrap text-center">
                             @lastAction.ActionType.GetShortName()
                             @if (user.Actions.Count > 1)

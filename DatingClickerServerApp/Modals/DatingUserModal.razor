@@ -14,7 +14,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-flex align-items-center mb-3">
-                        <a target="_blank" href="@ExtractShareUrlFromJsonData(User.JsonData)" class="me-3"><img src="@User.PreviewUrl" alt="Аватарка" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain"></a>
+                        <a target="_blank" href="@User.JsonData.ExtractShareUrl()" class="me-3"><img src="@User.PreviewUrl" alt="Аватарка" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain"></a>
                         <div>
                             <h5>
                                 <span>@User.Name, @User.Age</span>
@@ -43,7 +43,8 @@
                             {
                                 <p>Интересы: @string.Join(", ", User.Interests)</p>
                             }
-                            <p><span class="small-emoji">📍</span> @(User.CityName ?? ExtractDistanceFromJsonData(User.JsonData))</p>
+                            <p><span class="small-emoji">📍</span> @(User.CityName ?? User.JsonData.ExtractDistance())</p>
+                            <p>🕒 @User.JsonData.ExtractLastActiveAt()</p>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -84,23 +85,4 @@
     [Parameter] public DatingUser User { get; set; }
 
     [Parameter] public EventCallback<DatingUser> OnAddToBlacklistClick { get; set; }
-
-    private static string ExtractShareUrlFromJsonData(JsonElement jsonElement)
-    {
-        return jsonElement.TryGetProperty("share_url", out var shareUrl) ? shareUrl.GetString() : null;
-    }
-
-    private string ExtractDistanceFromJsonData(JsonElement jsonData)
-    {
-        if (jsonData.TryGetProperty("extra", out JsonElement extraElement) &&
-            extraElement.TryGetProperty("distance", out JsonElement distanceElement))
-        {
-            int distanceInMeters = distanceElement.GetInt32();
-            int distanceInKilometers = (int)Math.Round(distanceInMeters / 1000.0);
-
-            return $"{distanceInKilometers} км";
-        }
-
-        return "Неизвестно";
-    }
 }

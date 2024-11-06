@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
-using System.Text.Json;
 
 namespace DatingClickerServerApp.Pages
 {
@@ -29,7 +28,7 @@ namespace DatingClickerServerApp.Pages
         private List<DatingUser> _users;
 
         private bool _onlyVerified = false;
-        private bool _onlyToday = true;
+        private bool _onlyToday = false;
         private ICollection<DatingUserActionType> _selectedAllActionTypes = [];
         private ICollection<DatingUserActionType> _selectedLastActionTypes = [];
         private string _searchText = string.Empty;
@@ -127,25 +126,6 @@ namespace DatingClickerServerApp.Pages
                 await LoadUsers();
                 await JSRuntime.InvokeVoidAsync("scrollToTop");
             }
-        }
-
-        private static string ExtractDistanceFromJsonData(JsonElement jsonData)
-        {
-            if (jsonData.TryGetProperty("extra", out JsonElement extraElement) &&
-                extraElement.TryGetProperty("distance", out JsonElement distanceElement))
-            {
-                int distanceInMeters = distanceElement.GetInt32();
-                int distanceInKilometers = (int)Math.Round(distanceInMeters / 1000.0);
-
-                return $"{distanceInKilometers} км";
-            }
-
-            return "Неизвестно";
-        }
-
-        private static string ExtractShareUrlFromJsonData(JsonElement jsonElement)
-        {
-            return jsonElement.TryGetProperty("share_url", out var shareUrl) ? shareUrl.GetString() : null;
         }
 
         private async Task FilterUsers()
