@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DatingClickerServerApp.Common\DatingClickerServerApp.Common.csproj" />
+    <ProjectReference Include="..\DatingClickerServerApp.Core\DatingClickerServerApp.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

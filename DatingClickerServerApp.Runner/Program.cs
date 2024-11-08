@@ -1,6 +1,4 @@
 ﻿using DatingClickerServerApp.Common;
-using DatingClickerServerApp.Common.Persistence;
-using DatingClickerServerApp.Common.Services;
 using DatingClickerServerApp.Runner;
 using DatingClickerServerApp.Runner.Jobs;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +14,9 @@ using System;
 using System.IO;
 using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Runner.Configuration;
-using DatingClickerServerApp.Common.Services.Interfaces;
+using DatingClickerServerApp.Core.Interfaces;
+using DatingClickerServerApp.Core.Services;
+using DatingClickerServerApp.Core.Persistence;
 
 namespace DatingClickerConsoleApp
 {
