@@ -1,7 +1,4 @@
-﻿using DatingClickerServerApp.Common;
-using DatingClickerServerApp.Common.Persistence;
-using DatingClickerServerApp.Common.Services;
-using DatingClickerServerApp.Runner;
+﻿using DatingClickerServerApp.Runner;
 using DatingClickerServerApp.Runner.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +13,10 @@ using System;
 using System.IO;
 using DatingClickerServerApp.Common.Configuration;
 using DatingClickerServerApp.Runner.Configuration;
-using DatingClickerServerApp.Common.Services.Interfaces;
+using DatingClickerServerApp.Core.Interfaces;
+using DatingClickerServerApp.Core.Services;
+using DatingClickerServerApp.Core.Persistence;
+using DatingClickerServerApp.Core;
 
 namespace DatingClickerConsoleApp
 {
@@ -65,23 +65,20 @@ namespace DatingClickerConsoleApp
                                 }
                             })
                             .AddQuartzHostedService(q => q.WaitForJobsToComplete = true)
+                            .AddHttpClient()
                             .AddScoped<IDatingClickerService, VkDatingClickerService>()
                             .AddSingleton<IEncryptionService, EncryptionService>()
+                            .AddScoped<IDatingAccountService, DatingAccountService>()
                             .AddDbContext<AppDbContext>(options =>
                                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
-                            .AddScoped(provider =>
+                            .AddScoped<DatingClickerProcessor>()
+                            .Configure<VkDatingApiSettings>(configuration.GetSection("VkDatingApi"))
+                            .Configure<DatingClickerProcessorSettings>(config =>
                             {
-                                var datingClickerService = provider.GetRequiredService<IDatingClickerService>();
-                                var dbContext = provider.GetRequiredService<AppDbContext>();
-                                var encryptionService = provider.GetRequiredService<IEncryptionService>();
+                                config.SignIn = configuration.GetSection("SignIn").GetChildren().ToDictionary(s => s.Key, s => s.Value);
 
-                                var settings = new DatingClickerProcessorSettings
-                                {
-                                    SignIn = configuration.GetRequiredSection(nameof(DatingClickerProcessorSettings.SignIn)).GetChildren().ToDictionary(s => s.Key, s => s.Value),
-                                    LikeCriteries = configuration.GetSection(nameof(DatingClickerProcessorSettings.LikeCriteries)).Get<DatingUserCriteriesSettings>()
-                                };
-
-                                return new DatingClickerProcessor(datingClickerService, settings, dbContext, encryptionService);
+                                config.LikeCriteries = configuration.GetSection("LikeCriteries").Get<DatingUserCriteriesSettings>()
+                                                      ?? new DatingUserCriteriesSettings(155, [], ["plus size", "plus-size", "мужчину для кое чего интересного", "показать себя", "покажу себя"], null, false);
                             })
                             .Configure<DatingClickerJobSettings>(configuration.GetSection("DatingClickerJob"))
                             .Configure<EncryptionSettings>(configuration.GetSection("Encryption"));

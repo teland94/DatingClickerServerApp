@@ -1,4 +1,4 @@
-﻿using DatingClickerServerApp.Common;
+﻿using DatingClickerServerApp.Core;
 using DatingClickerServerApp.Runner.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
