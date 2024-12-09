@@ -1,0 +1,95 @@
+﻿@page "/statistics"
+@using DatingClickerServerApp.Common.Extensions
+
+<PageTitle>Statistics</PageTitle>
+
+<div class="d-flex justify-content-center mb-3">
+    <div class="btn-group" role="group" aria-label="Period selection">
+        <input type="radio" class="btn-check" name="period" id="today" autocomplete="off" @onclick="() => SetPeriod(DateTime.UtcNow.GetStartOfDay())" checked>
+        <label class="btn btn-outline-primary" for="today">Today</label>
+
+        <input type="radio" class="btn-check" name="period" id="month" autocomplete="off" @onclick="() => SetPeriod(DateTime.UtcNow.GetStartOfMonth())">
+        <label class="btn btn-outline-primary" for="month">Month</label>
+
+        <input type="radio" class="btn-check" name="period" id="year" autocomplete="off" @onclick="() => SetPeriod(DateTime.UtcNow.GetStartOfYear())">
+        <label class="btn btn-outline-primary" for="year">Year</label>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <div class="alert alert-warning" role="alert">
+            **Inactive profiles (older than a week) are excluded.**
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text">@_statistics.TotalUsers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">With Children</h5>
+                    <p class="card-text">@_statistics.UsersWithChildren</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">In IT Field (Among Interests)</h5>
+                    <p class="card-text">@_statistics.UsersWithITInterests</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">In IT Field, No Children (Among Interests)</h5>
+                    <p class="card-text">@_statistics.UsersWithITInterestsNoChildren</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Verified Users</h5>
+                    <p class="card-text">@_verifiedStatistics.TotalUsers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">With Children (Verified)</h5>
+                    <p class="card-text">@_verifiedStatistics.UsersWithChildren</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">In IT Field (Among Interests, Verified)</h5>
+                    <p class="card-text">@_verifiedStatistics.UsersWithITInterests</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">In IT Field, No Children (Among Interests, Verified)</h5>
+                    <p class="card-text">@_verifiedStatistics.UsersWithITInterestsNoChildren</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

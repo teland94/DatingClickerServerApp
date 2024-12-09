@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatingClickerServerApp.UI", "DatingClickerServerApp.UI\DatingClickerServerApp.UI.csproj", "{5DDEA24D-B1CF-411E-AF93-798948946705}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatingClickerServerApp.Common", "DatingClickerServerApp.Common\DatingClickerServerApp.Common.csproj", "{6AD85F5A-5FB9-490A-9423-A809C6E2D257}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatingClickerServerApp.Runner", "DatingClickerServerApp.Runner\DatingClickerServerApp.Runner.csproj", "{64470478-527C-4D8F-B964-1EE8A52873E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatingClickerServerApp.Core", "DatingClickerServerApp.Core\DatingClickerServerApp.Core.csproj", "{5AE40C94-9701-4439-89B2-1F7DA729E528}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5DDEA24D-B1CF-411E-AF93-798948946705}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DDEA24D-B1CF-411E-AF93-798948946705}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DDEA24D-B1CF-411E-AF93-798948946705}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DDEA24D-B1CF-411E-AF93-798948946705}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AD85F5A-5FB9-490A-9423-A809C6E2D257}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AD85F5A-5FB9-490A-9423-A809C6E2D257}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AD85F5A-5FB9-490A-9423-A809C6E2D257}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AD85F5A-5FB9-490A-9423-A809C6E2D257}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64470478-527C-4D8F-B964-1EE8A52873E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64470478-527C-4D8F-B964-1EE8A52873E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64470478-527C-4D8F-B964-1EE8A52873E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64470478-527C-4D8F-B964-1EE8A52873E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AE40C94-9701-4439-89B2-1F7DA729E528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AE40C94-9701-4439-89B2-1F7DA729E528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AE40C94-9701-4439-89B2-1F7DA729E528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AE40C94-9701-4439-89B2-1F7DA729E528}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F068F88-DFC4-4B3F-A977-1DA870F11D63}
+	EndGlobalSection
+EndGlobal

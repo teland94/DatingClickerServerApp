@@ -1,0 +1,55 @@
+﻿@using DatingClickerServerApp.UI.Components.Model
+
+@typeparam TItem
+
+<div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        @SelectedItemsText
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="padding: 10px; min-width: 200px;">
+        @foreach (var item in Items)
+        {
+            <li class="dropdown-item" @onclick="() => ToggleSelection(item)">
+                <div class="form-check">
+                    <InputCheckbox @bind-Value="item.IsSelected" @bind-Value:after="OnSelectionChange" class="form-check-input" />
+                    <label class="form-check-label">@ItemTextSelector(item.Item)</label>
+                </div>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter]
+    public List<SelectableItem<TItem>> Items { get; set; }
+
+    [Parameter]
+    public Func<TItem, string> ItemTextSelector { get; set; }
+
+    [Parameter]
+    public string NoSelectionText { get; set; } = "Select items";
+
+    [Parameter]
+    public EventCallback<List<TItem>> OnSelectionChanged { get; set; }
+
+    private string SelectedItemsText
+    {
+        get
+        {
+            var selectedItems = Items.Where(i => i.IsSelected).Select(i => i.Item);
+            return selectedItems.Any() ? string.Join(", ", selectedItems.Select(ItemTextSelector)) : NoSelectionText;
+        }
+    }
+
+    private async Task OnSelectionChange()
+    {
+        var selectedItems = Items.Where(i => i.IsSelected).Select(i => i.Item).ToList();
+        await OnSelectionChanged.InvokeAsync(selectedItems);
+    }
+
+    private async Task ToggleSelection(SelectableItem<TItem> item)
+    {
+        item.IsSelected = !item.IsSelected;
+        await OnSelectionChange();
+    }
+}

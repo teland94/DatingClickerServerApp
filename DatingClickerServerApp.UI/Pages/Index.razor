@@ -1,0 +1,14 @@
+﻿@page "/"
+@using DatingClickerServerApp.UI.Components
+
+<PageTitle>Dating Clicker</PageTitle>
+
+<p>
+    <button class="btn btn-primary" @onclick="async () => await Run(false)" disabled="@_loading">Click</button>
+    <button class="btn btn-danger ml-1" @onclick="CancelOperation" disabled="@(!_loading)">Cancel</button>
+    <input class="form-control d-inline-block ml-1 width-small" type="number" min="1" max="50" @bind-value="_repeatCount" />
+</p>
+
+<div id="datingResultContainer" class="result-container">
+    <p>@((MarkupString)_datingResult)</p>
+</div>

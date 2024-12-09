@@ -1,0 +1,127 @@
+﻿@page "/dating-users"
+@using DatingClickerServerApp.Common.Extensions
+@using DatingClickerServerApp.Common.Model
+@using DatingClickerServerApp.Core.Persistence
+@using DatingClickerServerApp.UI.Components
+@using DatingClickerServerApp.UI.Extensions
+@using DatingClickerServerApp.UI.Modals
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Dating Clicker Users</PageTitle>
+
+<div class="mb-2 d-flex align-items-center">
+    <div class="form-check me-3">
+        <input class="form-check-input" type="checkbox" @bind="_onlyVerified" @bind:after="FilterUsers" />
+        <label class="form-check-label" for="onlyVerified">
+            Verified Only
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" @bind="_onlyToday" @bind:after="FilterUsers" />
+        <label class="form-check-label" for="onlyToday">
+            Only Today
+        </label>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <MultiSelectDropdown TItem="DatingUserActionType" 
+                             Items="_selectableAllActionTypes" 
+                             ItemTextSelector="@(option => option.GetName())" 
+                             NoSelectionText="Filter by action type" 
+                             OnSelectionChanged="async selectedItems => { _selectedAllActionTypes = selectedItems; await OnSearch(); }" />
+    </div>
+</div>
+
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="Search by ID, name, description or interests" aria-label="Search by ID, name, description or interests" aria-describedby="button-search"
+        @bind-value="_searchText" @bind-value:event="oninput" @onkeypress="OnKeyPress">
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch" disabled="@string.IsNullOrEmpty(_searchText)">
+            <span class="oi oi-x" title="clear" aria-hidden="true"></span>
+        </button>
+    </div>
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" id="button-search" @onclick="OnSearch">
+            <span class="oi oi-magnifying-glass" title="search" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>
+
+<p>Total: @_totalUsers</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered mb-3">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Photo</th>
+                <th>Name</th>
+                <th>✔</th>
+                <th>Age</th>
+                <th>👶</th>
+                <th>Height</th>
+                <th>About</th>
+                <th>Interests</th>
+                <th>Location</th>
+                <th class="text-center">👀</th>
+                <th class="text-center">🚫</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (_users != null)
+            {
+                @foreach (var user in _users)
+                {
+                    var lastAction = user.Actions.FirstOrDefault();
+
+                    var rowClass = lastAction.ActionType switch
+                    {
+                        DatingUserActionType.SuperLike => "table-success",
+                        DatingUserActionType.Dislike => "table-danger",
+                        DatingUserActionType.None => "table-warning",
+                        _ => ""
+                    };
+
+                    <tr class="@rowClass">
+                        <td>
+                            <a href="javascript:void(0)" @onclick="() => ShowUserModal(user)">
+                                @user.ExternalId
+                            </a>
+                        </td>
+                        <td><a target="_blank" href="@user.JsonData.ExtractShareUrl()"><img src="@user.PreviewUrl" alt="Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain" /></a></td>
+                        <td>@user.Name</td>
+                        <td>@(user.IsVerified ? "✔" : "")</td>
+                        <td>@user.Age</td>
+                        <td>@(user.HasChildren.HasValue && user.HasChildren.Value ? "👶" : "")</td>
+                        <td>@user.Height</td>
+                        <td>@user.About</td>
+                        <td>@string.Join(", ", user.Interests)</td>
+                        <td class="text-nowrap"><span class="small-emoji">📍</span> @(user.CityName ?? user.JsonData.ExtractDistance())</td>
+                        <td class="text-nowrap text-center">
+                            @lastAction.ActionType.GetShortName()
+                            @if (user.Actions.Count > 1)
+                            {
+                                <span>*</span>
+                            }
+                        </td>
+                        <td>@(user.BlacklistedDatingUser != null ? "🚫" : "")</td>
+                        <td>@user.UpdatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <Pagination CurrentPage="@_currentPage" TotalPages="@_totalPages" OnPageChanged="GoToPage" />
+
+    <DatingUserModal User="_selectedUser" OnAddToBlacklistClick="() => AddToBlacklist(_selectedUser)" />
+</div>
+
+<style>
+    .small-emoji {
+        font-size: 0.6em;
+    }
+</style>

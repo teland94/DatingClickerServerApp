@@ -1,0 +1,89 @@
+﻿@using DatingClickerServerApp.Common.Extensions
+@using DatingClickerServerApp.Common.Model
+@using DatingClickerServerApp.UI.Extensions
+
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        @if (User != null)
+        {
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">User Information</h5>
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <a target="_blank" href="@User.JsonData.ExtractShareUrl()" class="me-3"><img src="@User.PreviewUrl" alt="Avatar" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: contain"></a>
+                        <div>
+                            <h5>
+                                <span>@User.Name, @User.Age</span>
+                                @if (User.Height.HasValue)
+                                {
+                                    <span>, @User.Height cm</span>
+                                }
+                                @if (User.IsVerified)
+                                {
+                                    <span class="text-success"> ✔</span>
+                                }
+                                @if (User.HasChildren.HasValue && User.HasChildren.Value)
+                                {
+                                    <span> 👶</span>
+                                }
+                                @if (User.BlacklistedDatingUser != null)
+                                {
+                                    <span> 🚫</span>
+                                }
+                            </h5>
+                            @if (!string.IsNullOrEmpty(User.About))
+                            {
+                                <p>@User.About</p>
+                            }
+                            @if (User.Interests != null && User.Interests.Any())
+                            {
+                                <p>Interests: @string.Join(", ", User.Interests)</p>
+                            }
+                            <p>📍 @(User.CityName ?? User.JsonData.ExtractDistance())</p>
+                            <p>🕒 @User.JsonData.ExtractLastActiveAt()</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="align-middle">Date</th>
+                                    <th class="text-center align-middle" style="width: 50px;">Action</th>
+                                    <th class="text-center align-middle">Super Like Text</th>
+                                    <th class="text-center align-middle">Account ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var action in User.Actions)
+                                {
+                                    <tr>
+                                        <td>@action.CreatedDate.ConvertToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td class="text-center align-middle">@action.ActionType.GetShortName()</td>
+                                        <td>@action.SuperLikeText</td>
+                                        <td class="text-center align-middle">@action.DatingAccount?.AppUserId</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (User.BlacklistedDatingUser == null)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="() => OnAddToBlacklistClick.InvokeAsync(User)" data-bs-dismiss="modal">Add to Blacklist</button>
+                    }
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public DatingUser User { get; set; }
+
+    [Parameter] public EventCallback<DatingUser> OnAddToBlacklistClick { get; set; }
+}
